@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ความมั่นคงปลอดภัยไซเบอร์ | กรมการสัตว์ทหารบก</title>
+<style>
+  :root {
+    --army-green: #2d5016;
+    --army-light: #4a7c2f;
+    --army-gold: #c9a227;
+    --army-dark: #1a2e0a;
+    --bg: #f5f5f0;
+    --white: #ffffff;
+    --gray: #6b7280;
+    --danger: #dc2626;
+    --success: #16a34a;
+    --warning: #d97706;
+    --info: #1d4ed8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Sarabun', 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: #1f2937;
+    font-size: 17px;
+    line-height: 1.7;
+  }
+
+  /* ===== TOP BAR ===== */
+  #topbar {
+    background: var(--army-dark);
+    color: var(--army-gold);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  #topbar .title { font-size: 14px; font-weight: bold; }
+  #progress-bar-wrap { flex: 1; margin: 0 20px; height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; }
+  #progress-bar { height: 100%; background: var(--army-gold); border-radius: 4px; transition: width 0.5s; width: 0%; }
+  #progress-label { font-size: 13px; color: #ccc; white-space: nowrap; }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; min-height: calc(100vh - 50px); }
+  .screen.active { display: block; }
+
+  /* ===== WELCOME SCREEN ===== */
+  #screen-welcome.active {
+    background: linear-gradient(135deg, var(--army-dark) 0%, var(--army-green) 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 40px 20px; color: white;
+  }
+  .welcome-emblem { font-size: 80px; margin-bottom: 20px; }
+  .welcome-title { font-size: 28px; font-weight: bold; color: var(--army-gold); margin-bottom: 8px; }
+  .welcome-subtitle { font-size: 18px; color: #d1fae5; margin-bottom: 6px; }
+  .welcome-dept { font-size: 15px; color: #86efac; margin-bottom: 30px; }
+  .welcome-info {
+    background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px 30px;
+    margin-bottom: 30px; text-align: left; max-width: 480px; width: 100%;
+  }
+  .welcome-info h3 { color: var(--army-gold); margin-bottom: 12px; font-size: 16px; }
+  .welcome-info ul { list-style: none; }
+  .welcome-info li { padding: 5px 0; color: #d1fae5; font-size: 15px; }
+  .welcome-info li::before { content: "✓ "; color: var(--army-gold); }
+  .name-input-wrap { max-width: 400px; width: 100%; margin-bottom: 20px; }
+  .name-input-wrap label { display: block; color: var(--army-gold); margin-bottom: 8px; font-size: 15px; }
+  #student-name {
+    width: 100%; padding: 12px 16px; border-radius: 8px; border: 2px solid var(--army-gold);
+    background: rgba(255,255,255,0.1); color: white; font-size: 16px;
+    font-family: inherit;
+  }
+  #student-name::placeholder { color: rgba(255,255,255,0.4); }
+  #student-name:focus { outline: none; background: rgba(255,255,255,0.2); }
+
+  /* ===== BUTTONS ===== */
+  .btn {
+    padding: 14px 32px; border-radius: 8px; border: none; cursor: pointer;
+    font-size: 17px; font-family: inherit; font-weight: bold; transition: all 0.2s;
+  }
+  .btn-primary { background: var(--army-gold); color: var(--army-dark); }
+  .btn-primary:hover { background: #e6b830; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .btn-primary:disabled { background: #666; color: #999; cursor: not-allowed; transform: none; }
+  .btn-outline { background: transparent; border: 2px solid var(--army-gold); color: var(--army-gold); }
+  .btn-outline:hover { background: var(--army-gold); color: var(--army-dark); }
+  .btn-next { background: var(--army-green); color: white; margin-top: 24px; }
+  .btn-next:hover { background: var(--army-light); }
+  .btn-sm { padding: 8px 20px; font-size: 15px; }
+
+  /* ===== MODULE NAV ===== */
+  #module-nav {
+    background: var(--army-green);
+    padding: 12px 20px;
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+  .mod-btn {
+    padding: 6px 14px; border-radius: 20px; border: 2px solid rgba(255,255,255,0.3);
+    background: transparent; color: white; font-size: 14px; cursor: pointer;
+    font-family: inherit; transition: all 0.2s;
+  }
+  .mod-btn.done { border-color: var(--army-gold); color: var(--army-gold); }
+  .mod-btn.active { background: var(--army-gold); color: var(--army-dark); border-color: var(--army-gold); }
+  .mod-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ===== LESSON SCREEN ===== */
+  #screen-lesson { padding: 0; }
+  .lesson-container { max-width: 760px; margin: 0 auto; padding: 30px 20px 60px; }
+
+  .module-header {
+    background: var(--army-green); color: white; border-radius: 12px;
+    padding: 24px; margin-bottom: 28px;
+  }
+  .module-badge {
+    display: inline-block; background: var(--army-gold); color: var(--army-dark);
+    font-size: 12px; font-weight: bold; padding: 3px 10px; border-radius: 12px; margin-bottom: 10px;
+  }
+  .module-header h2 { font-size: 22px; margin-bottom: 6px; }
+  .module-header p { color: #d1fae5; font-size: 15px; }
+
+  /* Content cards */
+  .content-card {
+    background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .content-card h3 { color: var(--army-green); margin-bottom: 14px; font-size: 18px; }
+  .content-card p { margin-bottom: 12px; color: #374151; }
+  .content-card ul, .content-card ol { padding-left: 20px; }
+  .content-card li { margin-bottom: 8px; }
+
+  /* Alert boxes */
+  .alert {
+    border-radius: 10px; padding: 16px 20px; margin: 16px 0;
+    border-left: 5px solid;
+  }
+  .alert-warning { background: #fef3c7; border-color: var(--warning); color: #92400e; }
+  .alert-danger { background: #fee2e2; border-color: var(--danger); color: #991b1b; }
+  .alert-info { background: #dbeafe; border-color: var(--info); color: #1e40af; }
+  .alert-success { background: #dcfce7; border-color: var(--success); color: #166534; }
+  .alert-title { font-weight: bold; margin-bottom: 6px; }
+
+  /* Comparison table */
+  .compare-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  .compare-table th { background: var(--army-green); color: white; padding: 10px 14px; text-align: left; }
+  .compare-table td { padding: 10px 14px; border-bottom: 1px solid #e5e7eb; }
+  .compare-table tr:nth-child(even) td { background: #f9fafb; }
+  .compare-table .bad { color: var(--danger); font-weight: bold; }
+  .compare-table .good { color: var(--success); font-weight: bold; }
+
+  /* Signal cards */
+  .signal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 16px 0; }
+  .signal-card {
+    border-radius: 10px; padding: 16px; text-align: center;
+    border: 2px solid;
+  }
+  .signal-card.red { border-color: var(--danger); background: #fff5f5; }
+  .signal-card.green { border-color: var(--success); background: #f0fff4; }
+  .signal-card .signal-icon { font-size: 32px; margin-bottom: 8px; }
+  .signal-card .signal-label { font-size: 13px; font-weight: bold; }
+  .signal-card p { font-size: 14px; color: #555; margin-top: 6px; }
+
+  /* Steps */
+  .steps { margin: 16px 0; }
+  .step {
+    display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px;
+    background: white; border-radius: 10px; padding: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .step-num {
+    min-width: 36px; height: 36px; border-radius: 50%;
+    background: var(--army-green); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 16px;
+  }
+  .step-content strong { display: block; margin-bottom: 4px; }
+  .step-content span { color: var(--gray); font-size: 15px; }
+
+  /* Scenario interactive */
+  .scenario-box {
+    background: #f8fafc; border: 2px solid var(--army-gold);
+    border-radius: 12px; padding: 20px; margin: 16px 0;
+  }
+  .scenario-box .scenario-story {
+    background: white; border-radius: 8px; padding: 16px;
+    margin-bottom: 16px; font-style: italic; color: #374151;
+    border-left: 4px solid var(--army-green);
+  }
+  .scenario-question { font-weight: bold; margin-bottom: 12px; color: var(--army-dark); }
+  .scenario-choices { display: flex; flex-direction: column; gap: 8px; }
+  .choice-btn {
+    padding: 12px 16px; text-align: left; border-radius: 8px;
+    border: 2px solid #d1d5db; background: white; cursor: pointer;
+    font-size: 15px; font-family: inherit; transition: all 0.2s;
+  }
+  .choice-btn:hover:not(:disabled) { border-color: var(--army-green); background: #f0f9f0; }
+  .choice-btn.correct { border-color: var(--success); background: #dcfce7; color: #166534; }
+  .choice-btn.wrong { border-color: var(--danger); background: #fee2e2; color: #991b1b; }
+  .choice-btn:disabled { cursor: default; }
+  .scenario-feedback {
+    margin-top: 14px; padding: 14px; border-radius: 8px;
+    display: none; font-size: 15px;
+  }
+  .scenario-feedback.show { display: block; }
+  .scenario-feedback.correct { background: #dcfce7; color: #166534; border: 2px solid var(--success); }
+  .scenario-feedback.wrong { background: #fee2e2; color: #991b1b; border: 2px solid var(--danger); }
+
+  /* Highlight box */
+  .highlight-box {
+    background: var(--army-dark); color: white;
+    border-radius: 10px; padding: 20px; margin: 16px 0;
+    font-size: 16px;
+  }
+  .highlight-box .rule { color: var(--army-gold); font-size: 20px; font-weight: bold; text-align: center; margin-bottom: 12px; }
+
+  /* Pocket card */
+  .pocket-card {
+    border: 3px solid var(--army-gold); border-radius: 12px;
+    padding: 20px; text-align: center; margin: 20px 0;
+    background: #fffbeb;
+  }
+  .pocket-card h4 { color: var(--army-dark); font-size: 17px; margin-bottom: 14px; }
+  .pocket-card .pocket-items { display: flex; flex-direction: column; gap: 8px; }
+  .pocket-item {
+    background: var(--army-green); color: white;
+    border-radius: 8px; padding: 10px 16px; font-size: 15px;
+  }
+
+  /* ===== QUIZ SCREEN ===== */
+  #screen-quiz { background: #f0f4f8; }
+  .quiz-container { max-width: 720px; margin: 0 auto; padding: 30px 20px 60px; }
+  .quiz-header {
+    background: var(--army-dark); color: white; border-radius: 12px;
+    padding: 24px; margin-bottom: 24px; text-align: center;
+  }
+  .quiz-header h2 { color: var(--army-gold); font-size: 22px; margin-bottom: 6px; }
+  .quiz-timer {
+    display: inline-block; background: rgba(255,255,255,0.1);
+    border-radius: 8px; padding: 8px 20px; margin-top: 10px;
+    font-size: 28px; font-weight: bold; color: var(--army-gold);
+    font-variant-numeric: tabular-nums;
+  }
+  .quiz-timer.urgent { color: #f87171; }
+  .quiz-progress-text { color: #9ca3af; font-size: 14px; margin-top: 8px; }
+
+  .quiz-card {
+    background: white; border-radius: 12px; padding: 24px;
+    margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .quiz-card.unanswered { border-left: 4px solid var(--army-gold); }
+  .quiz-card.answered { border-left: 4px solid var(--success); }
+  .q-num { color: var(--army-green); font-size: 13px; font-weight: bold; margin-bottom: 8px; }
+  .q-text { font-size: 17px; margin-bottom: 16px; color: #1f2937; font-weight: 500; }
+  .q-choices { display: flex; flex-direction: column; gap: 8px; }
+  .q-choice {
+    padding: 12px 16px; border-radius: 8px; border: 2px solid #e5e7eb;
+    background: #f9fafb; cursor: pointer; font-size: 15px;
+    font-family: inherit; text-align: left; transition: all 0.15s;
+  }
+  .q-choice:hover { border-color: var(--army-green); background: #f0f9f0; }
+  .q-choice.selected { border-color: var(--army-green); background: #e8f5e0; color: var(--army-dark); font-weight: bold; }
+
+  .quiz-actions { text-align: center; margin-top: 30px; }
+  .btn-submit { background: var(--army-gold); color: var(--army-dark); font-size: 18px; padding: 16px 48px; }
+  .btn-submit:hover { background: #e6b830; }
+  .btn-submit:disabled { background: #9ca3af; color: white; cursor: not-allowed; }
+
+  /* ===== RESULT SCREEN ===== */
+  #screen-result.active {
+    background: linear-gradient(135deg, var(--army-dark) 0%, var(--army-green) 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 40px 20px;
+  }
+  .result-card {
+    background: white; border-radius: 16px; padding: 36px; max-width: 600px;
+    width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;
+  }
+  .result-icon { font-size: 72px; margin-bottom: 16px; }
+  .result-name { color: var(--gray); font-size: 16px; margin-bottom: 4px; }
+  .result-score-label { color: var(--army-green); font-size: 15px; margin-bottom: 4px; }
+  .result-score { font-size: 64px; font-weight: bold; color: var(--army-dark); line-height: 1; }
+  .result-score span { font-size: 20px; color: var(--gray); }
+  .result-grade {
+    display: inline-block; border-radius: 8px; padding: 8px 20px;
+    font-size: 17px; font-weight: bold; margin: 16px 0;
+  }
+  .grade-pass { background: #dcfce7; color: #166534; }
+  .grade-fail { background: #fee2e2; color: #991b1b; }
+  .grade-excellent { background: #fef3c7; color: #92400e; }
+
+  .result-breakdown {
+    margin: 20px 0; text-align: left;
+    border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;
+  }
+  .breakdown-header {
+    background: var(--army-green); color: white;
+    padding: 10px 16px; font-weight: bold; font-size: 15px;
+  }
+  .breakdown-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 16px; border-bottom: 1px solid #f3f4f6; font-size: 15px;
+  }
+  .breakdown-item:last-child { border-bottom: none; }
+  .breakdown-item .correct-mark { color: var(--success); font-weight: bold; }
+  .breakdown-item .wrong-mark { color: var(--danger); font-weight: bold; }
+
+  .result-actions { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+  .btn-retry { background: var(--army-gold); color: var(--army-dark); }
+  .btn-review { background: var(--army-green); color: white; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 600px) {
+    body { font-size: 16px; }
+    .welcome-title { font-size: 22px; }
+    .lesson-container, .quiz-container { padding: 20px 14px 50px; }
+    .signal-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== PRINT (certificate) ===== */
+  @media print {
+    #topbar, #module-nav, .btn { display: none; }
+    .result-card { box-shadow: none; border: 2px solid #333; }
+  }
+
+  .fade-in { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div id="topbar">
+  <div class="title">🐾 กรมการสัตว์ทหารบก | ความมั่นคงปลอดภัยไซเบอร์</div>
+  <div id="progress-bar-wrap"><div id="progress-bar"></div></div>
+  <div id="progress-label">0 / 4 บท</div>
+</div>
+
+<!-- ===== SCREEN: WELCOME ===== -->
+<div id="screen-welcome" class="screen active">
+  <div class="welcome-emblem">🐾</div>
+  <div class="welcome-title">ความมั่นคงปลอดภัยไซเบอร์</div>
+  <div class="welcome-subtitle">สำหรับนักเรียนทหาร เหล่าทหารการสัตว์</div>
+  <div class="welcome-dept">กรมการสัตว์ทหารบก</div>
+
+  <div class="welcome-info">
+    <h3>📋 เกี่ยวกับหลักสูตรนี้</h3>
+    <ul>
+      <li>เรียนรู้ด้วยตนเอง ใช้เวลา 60–90 นาที</li>
+      <li>4 บทเรียน + แบบทดสอบ 20 ข้อ</li>
+      <li>ไม่ต้องมีพื้นฐาน IT มาก่อน</li>
+      <li>มีกิจกรรมสถานการณ์จำลองในแต่ละบท</li>
+      <li>ผ่านเกณฑ์ที่ 70 คะแนน (14/20 ข้อ)</li>
+    </ul>
+  </div>
+
+  <div class="name-input-wrap">
+    <label for="student-name">กรุณาพิมพ์ชื่อ-นามสกุล ก่อนเริ่มเรียน</label>
+    <input type="text" id="student-name" placeholder="เช่น สิบตรี สมชาย ใจดี" autocomplete="off">
+  </div>
+
+  <button class="btn btn-primary" id="btn-start" onclick="startCourse()" disabled>
+    เริ่มเรียน →
+  </button>
+</div>
+
+<!-- MODULE NAV (hidden at first) -->
+<div id="module-nav" style="display:none;">
+  <button class="mod-btn active" id="nav-0" onclick="goModule(0)">บทที่ 1: โลกรอบตัว</button>
+  <button class="mod-btn" id="nav-1" onclick="goModule(1)" disabled>บทที่ 2: กับดักที่พบได้</button>
+  <button class="mod-btn" id="nav-2" onclick="goModule(2)" disabled>บทที่ 3: ป้องกันตัวเอง</button>
+  <button class="mod-btn" id="nav-3" onclick="goModule(3)" disabled>บทที่ 4: ทหารและไซเบอร์</button>
+  <button class="mod-btn" id="nav-quiz" onclick="goQuiz()" disabled>📝 แบบทดสอบ</button>
+</div>
+
+<!-- ===== SCREEN: LESSON ===== -->
+<div id="screen-lesson" class="screen">
+  <div class="lesson-container fade-in" id="lesson-body"></div>
+</div>
+
+<!-- ===== SCREEN: QUIZ ===== -->
+<div id="screen-quiz" class="screen">
+  <div class="quiz-container fade-in">
+    <div class="quiz-header">
+      <h2>📝 แบบทดสอบความรู้</h2>
+      <div style="font-size:15px;color:#9ca3af;margin-top:4px;">เลือกคำตอบที่ถูกต้องที่สุด 1 ข้อ</div>
+      <div class="quiz-timer" id="quiz-timer">30:00</div>
+      <div class="quiz-progress-text" id="quiz-answered-count">ตอบแล้ว 0 / 20 ข้อ</div>
+    </div>
+    <div id="quiz-body"></div>
+    <div class="quiz-actions">
+      <button class="btn btn-submit" id="btn-submit" onclick="submitQuiz()" disabled>
+        ส่งคำตอบ และดูผลลัพธ์
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCREEN: RESULT ===== -->
+<div id="screen-result" class="screen">
+  <div class="result-card fade-in" id="result-card"></div>
+</div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+let studentName = '';
+let currentModule = 0;
+let moduleDone = [false, false, false, false];
+let quizAnswers = {};
+let timerInterval = null;
+let timeLeft = 30 * 60;
+
+// ============================================================
+//  NAME INPUT ENABLE
+// ============================================================
+function checkName() {
+  const val = document.getElementById('student-name').value.trim();
+  document.getElementById('btn-start').disabled = val.length < 3;
+}
+document.getElementById('student-name').addEventListener('input', checkName);
+document.getElementById('student-name').addEventListener('change', checkName);
+document.getElementById('student-name').addEventListener('keyup', checkName);
+
+// ============================================================
+//  MODULE CONTENT
+// ============================================================
+const modules = [
+
+  // ===== MODULE 0: โลกรอบตัว =====
+  {
+    title: 'บทที่ 1: โลกดิจิทัลรอบตัวเรา',
+    subtitle: 'ทำความเข้าใจว่าทำไมเราถึงต้องรู้เรื่องนี้',
+    content: `
+    <div class="content-card">
+      <h3>🌐 มือถือรู้จักคุณมากแค่ไหน?</h3>
+      <p>ลองคิดดูว่า มือถือของคุณเก็บอะไรไว้บ้าง:</p>
+      <div class="signal-grid">
+        <div class="signal-card red">
+          <div class="signal-icon">📍</div>
+          <div class="signal-label">ตำแหน่งที่อยู่</div>
+          <p>ตลอด 24 ชั่วโมง ทุกที่ที่คุณไป</p>
+        </div>
+        <div class="signal-card red">
+          <div class="signal-icon">💬</div>
+          <div class="signal-label">ทุกบทสนทนา</div>
+          <p>LINE, SMS, Facebook ทั้งหมด</p>
+        </div>
+        <div class="signal-card red">
+          <div class="signal-icon">🏦</div>
+          <div class="signal-label">บัญชีธนาคาร</div>
+          <p>แอปที่ผูกบัตร หรือบัญชีออมทรัพย์</p>
+        </div>
+        <div class="signal-card red">
+          <div class="signal-icon">🖼️</div>
+          <div class="signal-label">รูปภาพทั้งหมด</div>
+          <p>รวมถึงรูปในค่ายทหาร</p>
+        </div>
+      </div>
+      <div class="alert alert-warning">
+        <div class="alert-title">💡 คิดดูให้ดี</div>
+        ถ้ามือถือของคุณตกไปอยู่ในมือคนไม่หวังดี — เขาจะรู้จักชีวิตคุณดีกว่าเพื่อนสนิทเลย
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🎯 ทหารเป็นเป้าหมายพิเศษ</h3>
+      <p>คนร้ายสนใจทหารเพราะทหารมีสิ่งที่มีคุณค่า 3 อย่าง:</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <strong>ข้อมูลส่วนตัว</strong>
+            <span>ชื่อ เลขบัตร บัญชีธนาคาร ที่อยู่ — นำไปขายหรือแอบอ้างตัวตนได้</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <strong>ข้อมูลหน่วยงาน</strong>
+            <span>กำลังพล ตารางเวร แผนการเดินทาง — มีคุณค่าต่อผู้ไม่หวังดี</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <strong>เงิน</strong>
+            <span>หลอกให้โอนเงินโดยตรง ผ่านการแอบอ้างเป็นคนรู้จัก</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🏠 มือถือเหมือนบ้านของคุณ</h3>
+      <table class="compare-table">
+        <tr><th>มือถือ</th><th>เหมือนกับ</th></tr>
+        <tr><td>รหัส PIN มือถือ</td><td>กุญแจบ้าน</td></tr>
+        <tr><td>แอปในมือถือ</td><td>คนที่คุณให้เข้าบ้าน</td></tr>
+        <tr><td>Wi-Fi สาธารณะ</td><td>ถนนมืดที่ไม่มีไฟส่อง</td></tr>
+        <tr><td>รหัสผ่านที่เดาง่าย</td><td>กุญแจที่มีแค่ 2 รหัส</td></tr>
+        <tr><td>อัปเดตซอฟต์แวร์</td><td>ซ่อมรั้วที่มีรอยรั่ว</td></tr>
+      </table>
+    </div>
+
+    <div class="content-card">
+      <h3>🎭 สถานการณ์จำลอง: ลองคิดดู</h3>
+      <div class="scenario-box">
+        <div class="scenario-story">
+          "พลทหารวิทย์ใช้มือถือส่วนตัวต่อ Wi-Fi ฟรีที่ร้านกาแฟใกล้ค่าย แล้วล็อกอินเข้าแอปธนาคารเพื่อโอนเงินให้แม่"
+        </div>
+        <div class="scenario-question">⚠️ ความเสี่ยงหลักในสถานการณ์นี้คืออะไร?</div>
+        <div class="scenario-choices" id="s0-choices">
+          <button class="choice-btn" onclick="checkScenario('s0',this,false)">ก. ค่าธรรมเนียมการโอนเงินอาจสูงกว่าปกติ</button>
+          <button class="choice-btn" onclick="checkScenario('s0',this,true)">ข. คนอื่นในเครือข่ายเดียวกันอาจดักข้อมูลธนาคารได้</button>
+          <button class="choice-btn" onclick="checkScenario('s0',this,false)">ค. Wi-Fi ฟรีมักช้าทำให้โอนเงินไม่สำเร็จ</button>
+          <button class="choice-btn" onclick="checkScenario('s0',this,false)">ง. ไม่มีความเสี่ยง เพราะแอปธนาคารปลอดภัยอยู่แล้ว</button>
+        </div>
+        <div class="scenario-feedback" id="s0-feedback"></div>
+      </div>
+    </div>
+    `
+  },
+
+  // ===== MODULE 1: กับดัก =====
+  {
+    title: 'บทที่ 2: กับดักที่เจอได้ในชีวิตจริง',
+    subtitle: 'รู้จักวิธีหลอกลวงที่พบบ่อยที่สุด',
+    content: `
+    <div class="content-card">
+      <h3>📞 กับดักที่ 1: แก๊งคอลเซ็นเตอร์</h3>
+      <p>โทรมาอ้างเป็นเจ้าหน้าที่รัฐ บอกว่าคุณมีปัญหากฎหมาย แล้วให้โอนเงิน</p>
+      <div class="alert alert-danger">
+        <div class="alert-title">❌ สัญญาณอันตราย</div>
+        <ul>
+          <li>สร้างความตื่นตกใจ กดดันให้ตัดสินใจทันที</li>
+          <li>บอกว่า "ห้ามบอกใคร" หรือ "เป็นความลับ"</li>
+          <li>ให้โอนเงินเพื่อ "พิสูจน์ความบริสุทธิ์"</li>
+          <li>อ้างชื่อหน่วยงานจริง เช่น DSI, ตำรวจ, ธนาคาร</li>
+        </ul>
+      </div>
+      <div class="alert alert-success">
+        <div class="alert-title">✅ ความจริง</div>
+        เจ้าหน้าที่รัฐจริงไม่มีวันโทรมาขอให้โอนเงินทางโทรศัพท์
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>💬 กับดักที่ 2: LINE / Facebook ปลอม</h3>
+      <p>แฮกบัญชีของคนรู้จัก แล้วส่งข้อความขอเงินในชื่อนั้น</p>
+      <div class="alert alert-warning">
+        <div class="alert-title">⚠️ รูปแบบที่พบบ่อย</div>
+        <ul>
+          <li>"ช่วยโอนเงิน 3,000 ก่อนได้ไหม ติดธุระด่วน"</li>
+          <li>"ช่วยซื้อ Gift Card ให้ก่อนได้ไหม"</li>
+          <li>"โทรไม่ได้ ส่งข้อความมาได้เลย"</li>
+        </ul>
+      </div>
+      <div class="highlight-box">
+        <div class="rule">กฎเหล็ก: โทรยืนยันด้วยเสียงก่อนโอนเงินทุกครั้ง</div>
+        ไม่ว่าจะเป็นใครก็ตาม แม้แต่ผู้บังคับบัญชา ให้โทรตรงไปยืนยันก่อน
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🔗 กับดักที่ 3: ลิงก์และ QR Code อันตราย</h3>
+      <table class="compare-table">
+        <tr><th>ข้อความที่พบบ่อย</th><th>ความจริง</th></tr>
+        <tr>
+          <td>"รูปคุณหลุดออนไลน์แล้ว คลิกด่วน!"</td>
+          <td class="bad">กับดัก — ต้องการให้คลิกเพื่อเอาข้อมูล</td>
+        </tr>
+        <tr>
+          <td>"คุณได้รับรางวัล กดรับเลย"</td>
+          <td class="bad">ไม่มีรางวัลที่ไม่ได้สมัคร</td>
+        </tr>
+        <tr>
+          <td>"ระบบจะลบบัญชีคุณใน 24 ชม."</td>
+          <td class="bad">สร้างความกลัวเพื่อให้รีบคลิก</td>
+        </tr>
+        <tr>
+          <td>QR Code แปลกที่ติดตามที่สาธารณะ</td>
+          <td class="bad">อาจนำไปสู่เว็บปลอมขโมยข้อมูล</td>
+        </tr>
+      </table>
+      <div class="alert alert-info">
+        <div class="alert-title">💡 จำไว้</div>
+        ถ้ารู้สึก "น่าตื่นเต้น" หรือ "กลัว" เมื่อเห็นข้อความ — นั่นคือสัญญาณอันตราย หยุดก่อน
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>📱 กับดักที่ 4: แอปปลอม</h3>
+      <p>แอปดูดวง แอปได้เงิน แอปเกมฟรี — โหลดมาแล้วแอบดูทุกอย่างในมือถือ</p>
+      <div class="alert alert-danger">
+        <div class="alert-title">❌ คำถามที่ต้องถามก่อนติดตั้งแอปทุกตัว</div>
+        แอปนี้จำเป็นต้องใช้ กล้อง / ไมโครโฟน / รายชื่อผู้ติดต่อ ของฉันจริงๆ ไหม?
+        <br><br>ถ้าไม่จำเป็น → อย่าอนุญาต หรืออย่าติดตั้ง
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🎭 สถานการณ์จำลอง: บัญชี LINE ปลอม</h3>
+      <div class="scenario-box">
+        <div class="scenario-story">
+          "สิบโทสมชายได้รับข้อความ LINE จากบัญชีที่มีรูปโปรไฟล์เป็นรูป ผบ.หมู่ ของตัวเอง ข้อความว่า: 'ยุ่งอยู่ ไม่สะดวกโทร ช่วยโอนเงิน 3,500 บาทก่อนได้ไหม มีธุระด่วน คืนให้พรุ่งนี้แน่นอน'"
+        </div>
+        <div class="scenario-question">ควรทำอย่างไร?</div>
+        <div class="scenario-choices" id="s1-choices">
+          <button class="choice-btn" onclick="checkScenario('s1',this,false)">ก. โอนเงินไปเพราะเป็น ผบ.หมู่ ต้องเชื่อฟัง</button>
+          <button class="choice-btn" onclick="checkScenario('s1',this,true)">ข. โทรหา ผบ.หมู่ โดยตรงด้วยเสียงก่อนโอนเงิน</button>
+          <button class="choice-btn" onclick="checkScenario('s1',this,false)">ค. ส่ง LINE ถามรายละเอียดเพิ่มเติมก่อนโอน</button>
+          <button class="choice-btn" onclick="checkScenario('s1',this,false)">ง. โอนครึ่งหนึ่งก่อนเพื่อทดสอบว่าเป็นคนจริง</button>
+        </div>
+        <div class="scenario-feedback" id="s1-feedback"></div>
+      </div>
+    </div>
+    `
+  },
+
+  // ===== MODULE 2: ป้องกัน =====
+  {
+    title: 'บทที่ 3: ป้องกันตัวเองได้วันนี้เลย',
+    subtitle: 'สิ่งที่ทำได้ทันที โดยไม่ต้องรู้ IT',
+    content: `
+    <div class="content-card">
+      <h3>🔑 หลัก "หยุด — คิด — ถาม"</h3>
+      <p>สูตรนี้ใช้ได้กับทุกสถานการณ์ที่น่าสงสัย:</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num" style="background:#dc2626">1</div>
+          <div class="step-content">
+            <strong>หยุด — อย่าตอบสนองทันที</strong>
+            <span>คนร้ายออกแบบมาเพื่อให้คุณไม่มีเวลาคิด การหยุดเพียง 5 นาทีช่วยชีวิตได้</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:#d97706">2</div>
+          <div class="step-content">
+            <strong>คิด — ถามตัวเองว่ามีอะไรผิดปกติไหม?</strong>
+            <span>เร่งรีบผิดปกติไหม? ขอเงินหรือข้อมูลสำคัญไหม? ขอให้เก็บเป็นความลับไหม?</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:#16a34a">3</div>
+          <div class="step-content">
+            <strong>ถาม — ปรึกษาคนที่ไว้วางใจได้</strong>
+            <span>โทรหาคนที่อ้างตัว หรือปรึกษาผู้บังคับบัญชา ก่อนทำอะไรก็ตาม</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>✅ สิ่งที่ทำได้ทันที (ไม่ต้องรู้ IT)</h3>
+      <div class="alert alert-success">
+        <div class="alert-title">ระดับพื้นฐาน — ทำได้ใน 10 นาที</div>
+        <ul>
+          <li>ตั้งรหัส PIN มือถือ <strong>ไม่ใช่ 1234 หรือวันเกิด</strong></li>
+          <li>เปิดการยืนยันตัวตน 2 ขั้นตอน ในแอปธนาคาร</li>
+          <li>ล็อกหน้าจอมือถือทันทีเมื่อไม่ใช้</li>
+          <li>ไม่เชื่อมต่อ Wi-Fi สาธารณะเวลาทำธุรกรรมเงิน</li>
+        </ul>
+      </div>
+      <div class="alert alert-info">
+        <div class="alert-title">ระดับสำคัญ — ทำหลังอบรม</div>
+        <ul>
+          <li>ลบแอปที่ไม่ได้ใช้แล้วออก</li>
+          <li>ตรวจว่ามีคนล็อกอิน Facebook/LINE ผิดปกติไหม</li>
+          <li>แจ้งครอบครัวว่า "ถ้าจะขอเงินผ่านแชท ต้องโทรยืนยันก่อนเสมอ"</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🔐 รหัสผ่านที่ดี — จำง่าย แต่คนอื่นเดาไม่ได้</h3>
+      <table class="compare-table">
+        <tr><th>รหัสผ่านที่ <span style="color:#dc2626">ห้ามใช้</span></th><th>เพราะอะไร</th></tr>
+        <tr><td class="bad">1234 / 0000</td><td>เดาได้ใน 1 วินาที</td></tr>
+        <tr><td class="bad">วันเดือนปีเกิด</td><td>หาได้จาก Facebook</td></tr>
+        <tr><td class="bad">ชื่อตัวเอง</td><td>เป็นที่รู้จัก</td></tr>
+        <tr><td class="bad">vet2566, army123</td><td>เดาจากบริบทได้</td></tr>
+      </table>
+      <div class="alert alert-success" style="margin-top:12px;">
+        <div class="alert-title">✅ วิธีตั้งรหัสผ่านที่จำง่ายแต่ปลอดภัย</div>
+        ใช้วลีที่คุณจำได้ + ตัวเลข + สัญลักษณ์<br>
+        เช่น: <strong>หมาน้อย@2026!</strong> หรือ <strong>สัตว์#ทหาร2026</strong>
+        <br><br>และ <strong>ใช้รหัสต่างกันในแต่ละแอป</strong> — อย่างน้อยรหัสธนาคารต้องไม่ซ้ำกับที่อื่น
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🆘 ถ้าโดนหลอกแล้ว — ทำอะไรทันที?</h3>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content"><strong>โทร 1441</strong><span> — ศูนย์ปราบปรามมิจฉาชีพออนไลน์ แจ้งระงับบัญชีปลายทางได้ทันที</span></div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content"><strong>แจ้งธนาคาร</strong><span> — โทรสายด่วนธนาคารที่อยู่หลังบัตรเดบิต/เครดิต</span></div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content"><strong>แจ้งผู้บังคับบัญชา</strong><span> — โดยเฉพาะถ้าข้อมูลหน่วยงานเกี่ยวข้อง</span></div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content"><strong>เก็บหลักฐาน</strong><span> — สกรีนช็อตข้อความ บันทึกเบอร์โทร อย่าลบ</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🎭 สถานการณ์จำลอง: โดนแก๊งคอลเซ็นเตอร์</h3>
+      <div class="scenario-box">
+        <div class="scenario-story">
+          "สิบตรีมานพรับโทรศัพท์จากเบอร์ที่ไม่รู้จัก คนโทรอ้างว่าเป็นตำรวจ บอกว่าบัญชีธนาคารของมานพเกี่ยวข้องกับการฟอกเงิน ต้องโอนเงินไปฝากบัญชีปลอดภัยก่อน แล้วจะคืนให้ภายใน 3 วัน พร้อมบอกว่าห้ามบอกใครเด็ดขาด"
+        </div>
+        <div class="scenario-question">ข้อใดคือสัญญาณอันตรายที่ชัดเจนที่สุด?</div>
+        <div class="scenario-choices" id="s2-choices">
+          <button class="choice-btn" onclick="checkScenario('s2',this,false)">ก. โทรมาจากเบอร์ที่ไม่รู้จัก</button>
+          <button class="choice-btn" onclick="checkScenario('s2',this,false)">ข. อ้างว่าเป็นตำรวจ</button>
+          <button class="choice-btn" onclick="checkScenario('s2',this,true)">ค. ให้โอนเงิน + ห้ามบอกใคร — ทั้งสองอย่างพร้อมกัน</button>
+          <button class="choice-btn" onclick="checkScenario('s2',this,false)">ง. พูดถึงเรื่องบัญชีธนาคาร</button>
+        </div>
+        <div class="scenario-feedback" id="s2-feedback"></div>
+      </div>
+    </div>
+    `
+  },
+
+  // ===== MODULE 3: ทหารและไซเบอร์ =====
+  {
+    title: 'บทที่ 4: ทหารและโลกออนไลน์',
+    subtitle: 'ความระมัดระวังพิเศษในฐานะทหาร',
+    content: `
+    <div class="content-card">
+      <h3>📸 รูปที่โพสต์โซเชียล — ดูเหมือนธรรมดา แต่เปิดเผยอะไรได้บ้าง?</h3>
+      <table class="compare-table">
+        <tr><th>สิ่งที่โพสต์</th><th>ข้อมูลที่เปิดเผยโดยไม่รู้ตัว</th></tr>
+        <tr><td>รูปกินข้าวในโรงอาหาร</td><td>จำนวนกำลังพลในหน่วยช่วงนั้น</td></tr>
+        <tr><td>Check-in ที่ค่ายทหาร</td><td>พิกัดที่ตั้งหน่วย</td></tr>
+        <tr><td>"ออกฝึกแล้ว กลับอาทิตย์หน้า"</td><td>หน่วยว่างเปล่าช่วงนั้น</td></tr>
+        <tr><td>รูปขึ้นรถทหาร</td><td>ประเภทยานพาหนะและทะเบียน</td></tr>
+        <tr><td>Tag ชื่อเพื่อนทหารทั้งกลุ่ม</td><td>รายชื่อกำลังพลในหน่วย</td></tr>
+      </table>
+      <div class="highlight-box">
+        <div class="rule">ถามก่อนโพสต์เสมอ:</div>
+        "ถ้าคนไม่หวังดีเห็นโพสต์นี้ จะได้ประโยชน์อะไร?"
+        <br>ถ้าตอบว่า "ได้" — อย่าโพสต์
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>💬 กลุ่ม LINE ของหน่วย — ระวังกว่าที่คิด</h3>
+      <div class="alert alert-warning">
+        <div class="alert-title">⚠️ สิ่งที่หลายคนไม่รู้</div>
+        <ul>
+          <li>กลุ่ม LINE มีสมาชิกเพิ่ม/ลดได้ตลอดเวลา ไม่มีใครรู้ชัดว่าใครอยู่ในกลุ่มบ้าง</li>
+          <li>ข้อความใน LINE ไม่ได้เข้ารหัสอย่างปลอดภัยเสมอไป</li>
+          <li>สกรีนช็อตข้อความส่งต่อได้ง่าย</li>
+        </ul>
+      </div>
+      <div class="alert alert-danger">
+        <div class="alert-title">❌ อย่าส่งสิ่งเหล่านี้ใน LINE ส่วนตัว</div>
+        ตารางเวร / แผนการเคลื่อนย้าย / รายชื่อกำลังพล / ข้อมูลราชการใดๆ
+        <br><br>ใช้ช่องทางราชการที่หน่วยกำหนดเท่านั้น
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🕵️ ระวังคนรู้จักใหม่ที่ถามเรื่องหน่วย</h3>
+      <p>คนที่มาถามเรื่องหน่วยงานมากผิดปกติ — เช่น จำนวนกำลังพล ตารางเวร หรือแผนการฝึก — ไม่จำเป็นต้องได้รับคำตอบ</p>
+      <div class="alert alert-success">
+        <div class="alert-title">✅ คำตอบที่ใช้ได้เสมอ</div>
+        <strong>"ไม่สะดวกบอกครับ/ค่ะ"</strong> — เป็นคำตอบที่ถูกต้องและไม่ผิดมารยาท
+        <br><br>และถ้าสงสัยว่ามีการสอดแนม → แจ้งผู้บังคับบัญชาทันที
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>📋 สรุปสิ่งที่ทหารต้องจำ</h3>
+      <div class="pocket-card">
+        <h4>🃏 การ์ดความจำ — พกติดตัวได้</h4>
+        <div class="pocket-items">
+          <div class="pocket-item">🛑 3 สัญญาณอันตราย: เร่งรีบ | ห้ามบอกใคร | ขอเงิน/ข้อมูล</div>
+          <div class="pocket-item">🔑 หลัก: หยุด → คิด → ถาม ก่อนทำทุกครั้ง</div>
+          <div class="pocket-item">📵 ไม่โพสต์: พิกัด | กำลังพล | แผนงาน | ยานพาหนะ</div>
+          <div class="pocket-item">📞 โดนหลอก? โทร 1441 ทันที</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h3>🎭 สถานการณ์จำลองสุดท้าย</h3>
+      <div class="scenario-box">
+        <div class="scenario-story">
+          "สิบตรีวิชัยกำลังจะโพสต์รูปในงานเลี้ยงหน่วยลงใน Facebook โดยมีรูปหมู่กับเพื่อนทหาร 12 คน พร้อม Tag ชื่อทุกคน และ Check-in ที่ตั้งค่าย เพื่อนๆ บอกว่าโพสต์ได้เลย เพราะเป็นงานเลี้ยงธรรมดา ไม่ได้มีข้อมูลลับอะไร"
+        </div>
+        <div class="scenario-question">วิชัยควรทำอย่างไร?</div>
+        <div class="scenario-choices" id="s3-choices">
+          <button class="choice-btn" onclick="checkScenario('s3',this,false)">ก. โพสต์ได้เลยเพราะเพื่อนบอกว่าโอเค</button>
+          <button class="choice-btn" onclick="checkScenario('s3',this,false)">ข. โพสต์รูปได้แต่ใส่แคปชั่นไม่ระบุชื่อหน่วย</button>
+          <button class="choice-btn" onclick="checkScenario('s3',this,true)">ค. ไม่ควร Check-in ที่ค่าย และไม่ Tag ชื่อเพื่อนทหารโดยไม่ได้รับอนุญาต</button>
+          <button class="choice-btn" onclick="checkScenario('s3',this,false)">ง. โพสต์ได้แต่ต้องตั้ง Privacy เป็น "เพื่อนเท่านั้น" ก็พอ</button>
+        </div>
+        <div class="scenario-feedback" id="s3-feedback"></div>
+      </div>
+    </div>
+    `
+  }
+];
+
+const scenarioFeedback = {
+  s0: {
+    correct: "✅ ถูกต้อง! Wi-Fi สาธารณะไม่มีการเข้ารหัส คนอื่นในเครือข่ายเดียวกันอาจดักจับข้อมูลธนาคารได้ ควรใช้เน็ตมือถือส่วนตัวเมื่อทำธุรกรรมทางการเงิน",
+    wrong: "❌ ไม่ถูกต้อง ความเสี่ยงหลักคือการดักจับข้อมูลในเครือข่าย Wi-Fi สาธารณะ — คนอื่นในร้านอาจเห็นข้อมูลธนาคารได้"
+  },
+  s1: {
+    correct: "✅ ถูกต้อง! ต้องโทรหาคนนั้นโดยตรงด้วยเสียงก่อนเสมอ บัญชี LINE อาจถูกแฮก การส่งข้อความตอบกลับใน LINE ไม่พิสูจน์ว่าเป็นคนจริง",
+    wrong: "❌ ไม่ถูกต้อง ถ้าบัญชีถูกแฮก คนร้ายก็อ่านและตอบข้อความ LINE ได้ ต้องโทรด้วยเสียงเท่านั้นถึงจะยืนยันตัวตนได้"
+  },
+  s2: {
+    correct: "✅ ถูกต้อง! การให้โอนเงินและห้ามบอกใครพร้อมกัน คือสูตรคลาสสิกของแก๊งคอลเซ็นเตอร์ เจ้าหน้าที่รัฐจริงไม่มีวันทำแบบนี้",
+    wrong: "❌ ไม่ถูกต้อง สัญญาณที่ชัดที่สุดคือการให้โอนเงิน + ห้ามบอกใคร ทั้งสองอย่างนี้พร้อมกันคือสูตรของมิจฉาชีพ"
+  },
+  s3: {
+    correct: "✅ ถูกต้อง! การ Check-in ที่ค่ายทหารเปิดเผยพิกัด และการ Tag ชื่อเพื่อนทหารเปิดเผยรายชื่อกำลังพล แม้ Privacy จะเป็น 'เพื่อนเท่านั้น' ก็ยังมีความเสี่ยง",
+    wrong: "❌ ไม่ถูกต้อง แม้โพสต์ส่วนตัว แต่การ Check-in ที่ค่ายและ Tag รายชื่อทหารเป็นการเปิดเผยข้อมูลหน่วย ซึ่งอาจเป็นประโยชน์ต่อผู้ไม่หวังดีได้"
+  }
+};
+
+// ============================================================
+//  QUIZ DATA
+// ============================================================
+const quizData = [
+  {
+    q: "ทำไมทหารจึงเป็นเป้าหมายที่น่าสนใจสำหรับมิจฉาชีพ?",
+    choices: ["เพราะทหารมีรายได้สูงกว่าคนทั่วไป","เพราะทหารมีทั้งข้อมูลส่วนตัวและข้อมูลหน่วยงานที่มีคุณค่า","เพราะทหารใช้สมาร์ทโฟนมากกว่าคนทั่วไป","เพราะทหารไม่มีเวลาระวังตัว"],
+    answer: 1
+  },
+  {
+    q: "ข้อใดเป็นสัญญาณที่บ่งบอกว่ากำลังถูกหลอกลวงมากที่สุด?",
+    choices: ["โทรศัพท์มาในเวลากลางวัน","ผู้โทรพูดภาษาไทยชัดเจน","สร้างความเร่งรีบและบอกให้ห้ามบอกใคร","อ้างชื่อหน่วยงานราชการ"],
+    answer: 2
+  },
+  {
+    q: "เพื่อนในหน่วยส่ง LINE มาขอยืมเงินด่วน ควรทำอะไรก่อน?",
+    choices: ["โอนเงินไปก่อนเพราะไว้ใจกัน","ส่ง LINE ถามรายละเอียดเพิ่มเติม","โทรหาเพื่อนคนนั้นโดยตรงด้วยเสียงเพื่อยืนยัน","ถามคนในหน่วยว่าเพื่อนคนนี้น่าเชื่อถือไหม"],
+    answer: 2
+  },
+  {
+    q: "ควรทำอย่างไรเมื่อพบแฟลชไดรฟ์ไม่มีเจ้าของในค่ายทหาร?",
+    choices: ["เสียบคอมพิวเตอร์เพื่อดูว่าเป็นของใคร","ทิ้งไว้ที่เดิม","ส่งให้ผู้บังคับบัญชาโดยไม่เสียบอุปกรณ์ใดๆ","เก็บไว้ใช้เอง"],
+    answer: 2
+  },
+  {
+    q: "ข้อมูลใดอันตรายที่สุดหากโพสต์ลงโซเชียลมีเดีย?",
+    choices: ["รูปอาหารกลางวัน","ข้อความขอบคุณเพื่อน","รูปพร้อม Check-in ที่ตั้งค่ายทหาร","รูปกิจกรรมจิตอาสาที่ได้รับอนุญาตแล้ว"],
+    answer: 2
+  },
+  {
+    q: "หลัก 'หยุด — คิด — ถาม' ควรใช้เมื่อใด?",
+    choices: ["เฉพาะเมื่อถูกโทรมาจากเบอร์แปลก","เฉพาะเมื่อมีคนขอเงิน","ทุกครั้งที่ได้รับข้อความที่ทำให้รู้สึกเร่งรีบหรือกังวล","เฉพาะในเวลาราชการ"],
+    answer: 2
+  },
+  {
+    q: "เจ้าหน้าที่รัฐจริงจะไม่ทำสิ่งใด?",
+    choices: ["ออกหมายเรียกเป็นเอกสาร","นัดพบที่ทำการราชการ","โทรศัพท์ขอให้โอนเงินเพื่อพิสูจน์ความบริสุทธิ์","แจ้งความที่สถานีตำรวจ"],
+    answer: 2
+  },
+  {
+    q: "รหัสผ่านข้อใดปลอดภัยที่สุด?",
+    choices: ["1234","วันเดือนปีเกิด","หมาน้อย@2026!","vet2566"],
+    answer: 2
+  },
+  {
+    q: "ทำไมจึงไม่ควรใช้ Wi-Fi สาธารณะทำธุรกรรมธนาคาร?",
+    choices: ["สัญญาณช้าทำให้ทำรายการไม่สำเร็จ","คนอื่นในเครือข่ายอาจดักจับข้อมูลได้","ธนาคารไม่รองรับ Wi-Fi สาธารณะ","ค่าธรรมเนียมจะสูงขึ้น"],
+    answer: 1
+  },
+  {
+    q: "ถ้าโดนหลอกให้โอนเงินไปแล้ว ควรโทรไปที่เบอร์ใดก่อน?",
+    choices: ["191 (ตำรวจ)","1669 (กู้ภัย)","1441 (ศูนย์ปราบมิจฉาชีพ)","1133 (ร้องเรียน)"],
+    answer: 2
+  },
+  {
+    q: "สิ่งใดไม่ควรส่งในกลุ่ม LINE ส่วนตัว แม้เป็นกลุ่มในหน่วยเดียวกัน?",
+    choices: ["ภาพกิจกรรมจิตอาสาที่ได้รับอนุญาต","ข่าวสารทั่วไป","ตารางเวรและแผนการเคลื่อนย้าย","รูปอาหาร"],
+    answer: 2
+  },
+  {
+    q: "คนรู้จักใหม่ถามถึงจำนวนกำลังพลและตารางเวรของหน่วย ควรตอบอย่างไร?",
+    choices: ["บอกไปเพราะไม่ใช่ความลับ","บอกบางส่วน","ปฏิเสธและรายงานผู้บังคับบัญชา","ให้ถามผู้บังคับบัญชาเอง"],
+    answer: 2
+  },
+  {
+    q: "การโพสต์รูปหมู่ทหารพร้อม Tag ชื่อเพื่อนทุกคน มีความเสี่ยงอะไร?",
+    choices: ["ผิดลิขสิทธิ์","เปิดเผยรายชื่อกำลังพลในหน่วย","ทำให้โทรศัพท์ถูกแฮก","ไม่มีความเสี่ยง"],
+    answer: 1
+  },
+  {
+    q: "ข้อความ 'คุณได้รับรางวัลที่ 1 กดลิงก์รับเลย' ควรทำอย่างไร?",
+    choices: ["กดลิงก์เพราะอาจโชคดีจริง","ส่งต่อให้เพื่อน","ไม่กดลิงก์ เพราะรางวัลที่ไม่ได้สมัครไม่มีจริง","กดดูก่อนแล้วค่อยปิด"],
+    answer: 2
+  },
+  {
+    q: "แอปที่ดาวน์โหลดมาฟรีขอเข้าถึงกล้อง ไมโครโฟน และรายชื่อ ควรทำอย่างไร?",
+    choices: ["อนุญาตทั้งหมดเพราะเป็นเรื่องปกติ","พิจารณาว่าแอปจำเป็นต้องใช้สิทธิ์เหล่านั้นจริงหรือไม่","ลบทันทีโดยไม่พิจารณา","ถามเพื่อนว่าเขาอนุญาตไหม"],
+    answer: 1
+  },
+  {
+    q: "บัญชีโซเชียลมีเดียถูกแฮก สิ่งแรกที่ต้องทำคืออะไร?",
+    choices: ["โพสต์แจ้งเพื่อนทุกคนในบัญชีนั้น","รอดูก่อน","เปลี่ยนรหัสผ่านทันทีและแจ้งคนรู้จักอย่าเชื่อข้อความ","ลบบัญชีและสร้างใหม่"],
+    answer: 2
+  },
+  {
+    q: "ทำไมคนร้ายมักบอกว่า 'ห้ามบอกใคร' เมื่อหลอกลวง?",
+    choices: ["เพื่อรักษาความลับราชการ","กลัวว่าคนอื่นจะรู้ทันและเหยื่อจะไม่ถูกหลอก","เป็นขั้นตอนปกติทางกฎหมาย","เพื่อปกป้องความเป็นส่วนตัวของเหยื่อ"],
+    answer: 1
+  },
+  {
+    q: "ข้อใดคือการปฏิบัติที่ปลอดภัยที่สุดสำหรับรหัสผ่าน?",
+    choices: ["ใช้รหัสผ่านเดียวกันทุกแอปเพื่อจำง่าย","เขียนรหัสผ่านติดโต๊ะทำงาน","เปิดการยืนยันตัวตน 2 ขั้นตอนในแอปธนาคาร","บอกเพื่อนที่ไว้ใจได้ไว้บ้าง"],
+    answer: 2
+  },
+  {
+    q: "การ Check-in ที่ตั้งค่ายทหารลงโซเชียลมีเดียมีความเสี่ยงอะไร?",
+    choices: ["ทำให้ถูกแฮกโทรศัพท์","เปิดเผยพิกัดที่ตั้งหน่วยต่อสาธารณะ","ผิดกฎหมายลิขสิทธิ์","ทำให้ข้อมูลส่วนตัวรั่วไหล"],
+    answer: 1
+  },
+  {
+    q: "ประโยคใดสรุปแนวทางความปลอดภัยไซเบอร์ในชีวิตประจำวันได้ดีที่สุด?",
+    choices: ["อย่าใช้อินเทอร์เน็ตถ้าไม่จำเป็น","เชื่อคนรู้จักได้เสมอแม้ติดต่อออนไลน์","หยุดคิดก่อนทำ โดยเฉพาะเมื่อรู้สึกเร่งรีบหรือกลัว","ให้ผู้เชี่ยวชาญ IT จัดการแทนเสมอ"],
+    answer: 2
+  }
+];
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function startCourse() {
+  studentName = document.getElementById('student-name').value.trim();
+  document.getElementById('screen-welcome').classList.remove('active');
+  document.getElementById('module-nav').style.display = 'flex';
+  showScreen('screen-lesson');
+  renderModule(0);
+  updateProgress();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goModule(idx) {
+  currentModule = idx;
+  showScreen('screen-lesson');
+  renderModule(idx);
+  document.querySelectorAll('.mod-btn').forEach((b,i) => {
+    b.classList.remove('active');
+    if(i === idx) b.classList.add('active');
+  });
+  document.getElementById('lesson-body').classList.remove('fade-in');
+  void document.getElementById('lesson-body').offsetWidth;
+  document.getElementById('lesson-body').classList.add('fade-in');
+  window.scrollTo(0,0);
+}
+
+function goQuiz() {
+  showScreen('screen-quiz');
+  document.querySelectorAll('.mod-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-quiz').classList.add('active');
+  renderQuiz();
+  startTimer();
+  window.scrollTo(0,0);
+}
+
+// ============================================================
+//  RENDER LESSON
+// ============================================================
+function renderModule(idx) {
+  const m = modules[idx];
+  document.getElementById('lesson-body').innerHTML = `
+    <div class="module-header">
+      <div class="module-badge">บทที่ ${idx+1} / 4</div>
+      <h2>${m.title}</h2>
+      <p>${m.subtitle}</p>
+    </div>
+    ${m.content}
+    <div style="text-align:center;">
+      <button class="btn btn-next" onclick="completeModule(${idx})">
+        ${idx < 3 ? 'เรียนบทต่อไป →' : '🎯 ไปทำแบบทดสอบ →'}
+      </button>
+    </div>
+  `;
+}
+
+function completeModule(idx) {
+  moduleDone[idx] = true;
+  document.getElementById(`nav-${idx}`).classList.add('done');
+  updateProgress();
+  if (idx < 3) {
+    const next = idx + 1;
+    document.getElementById(`nav-${next}`).disabled = false;
+    goModule(next);
+  } else {
+    document.getElementById('nav-quiz').disabled = false;
+    goQuiz();
+  }
+}
+
+function updateProgress() {
+  const done = moduleDone.filter(Boolean).length;
+  document.getElementById('progress-bar').style.width = (done / 4 * 100) + '%';
+  document.getElementById('progress-label').textContent = `${done} / 4 บท`;
+}
+
+// ============================================================
+//  SCENARIO CHECK
+// ============================================================
+function checkScenario(id, btn, isCorrect) {
+  const choices = document.getElementById(`${id}-choices`);
+  choices.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+  const feedback = document.getElementById(`${id}-feedback`);
+  if (isCorrect) {
+    btn.classList.add('correct');
+    feedback.className = 'scenario-feedback correct show';
+    feedback.textContent = scenarioFeedback[id].correct;
+  } else {
+    btn.classList.add('wrong');
+    feedback.className = 'scenario-feedback wrong show';
+    feedback.textContent = scenarioFeedback[id].wrong;
+  }
+}
+
+// ============================================================
+//  RENDER QUIZ
+// ============================================================
+function renderQuiz() {
+  quizAnswers = {};
+  let html = '';
+  quizData.forEach((q, qi) => {
+    html += `
+      <div class="quiz-card unanswered" id="qcard-${qi}">
+        <div class="q-num">ข้อที่ ${qi+1} จาก ${quizData.length}</div>
+        <div class="q-text">${q.q}</div>
+        <div class="q-choices">
+          ${q.choices.map((c,ci) => `
+            <button class="q-choice" onclick="selectAnswer(${qi},${ci})">
+              ${['ก','ข','ค','ง'][ci]}. ${c}
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+  document.getElementById('quiz-body').innerHTML = html;
+}
+
+function selectAnswer(qi, ci) {
+  quizAnswers[qi] = ci;
+  const card = document.getElementById(`qcard-${qi}`);
+  card.querySelectorAll('.q-choice').forEach((b,i) => {
+    b.classList.toggle('selected', i === ci);
+  });
+  card.className = 'quiz-card answered';
+  const count = Object.keys(quizAnswers).length;
+  document.getElementById('quiz-answered-count').textContent = `ตอบแล้ว ${count} / ${quizData.length} ข้อ`;
+  document.getElementById('btn-submit').disabled = count < quizData.length;
+}
+
+// ============================================================
+//  TIMER
+// ============================================================
+function startTimer() {
+  timeLeft = 30 * 60;
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60).toString().padStart(2,'0');
+    const s = (timeLeft % 60).toString().padStart(2,'0');
+    const el = document.getElementById('quiz-timer');
+    if (el) {
+      el.textContent = `${m}:${s}`;
+      el.classList.toggle('urgent', timeLeft < 300);
+    }
+    if (timeLeft <= 0) { clearInterval(timerInterval); submitQuiz(); }
+  }, 1000);
+}
+
+// ============================================================
+//  SUBMIT QUIZ
+// ============================================================
+function submitQuiz() {
+  clearInterval(timerInterval);
+  let score = 0;
+  const results = quizData.map((q, qi) => {
+    const chosen = quizAnswers[qi];
+    const correct = chosen === q.answer;
+    if (correct) score++;
+    return { q: q.q, chosen, correct, answer: q.answer, choices: q.choices };
+  });
+  showResult(score, results);
+}
+
+function showResult(score, results) {
+  showScreen('screen-result');
+  const pct = score * 5;
+  const pass = pct >= 70;
+  const excellent = pct >= 90;
+
+  let gradeClass = pass ? (excellent ? 'grade-excellent' : 'grade-pass') : 'grade-fail';
+  let gradeText = excellent ? '🌟 ดีเยี่ยม' : (pass ? '✅ ผ่าน' : '❌ ไม่ผ่าน');
+  let icon = excellent ? '🏆' : (pass ? '🎖️' : '📚');
+
+  let breakdownHTML = results.map((r,i) => `
+    <div class="breakdown-item">
+      <span>ข้อ ${i+1}: ${r.q.substring(0,40)}${r.q.length>40?'...':''}</span>
+      <span class="${r.correct ? 'correct-mark' : 'wrong-mark'}">${r.correct ? '✓' : '✗'}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('result-card').innerHTML = `
+    <div class="result-icon">${icon}</div>
+    <div class="result-name">${studentName}</div>
+    <div class="result-score-label">คะแนนที่ได้</div>
+    <div class="result-score">${pct}<span>/100</span></div>
+    <div class="result-score-label" style="margin-top:4px;">(ตอบถูก ${score} จาก ${quizData.length} ข้อ)</div>
+    <span class="result-grade ${gradeClass}">${gradeText}</span>
+    ${!pass ? '<div class="alert alert-warning" style="text-align:left;margin:16px 0;">ต้องทำคะแนนให้ได้ 70 คะแนนขึ้นไปจึงจะผ่าน กรุณาทบทวนบทเรียนและทดสอบใหม่อีกครั้ง</div>' : ''}
+    ${pass ? '<div class="alert alert-success" style="text-align:left;margin:16px 0;">ยินดีด้วย! คุณผ่านการทดสอบความรู้ด้านความมั่นคงปลอดภัยไซเบอร์</div>' : ''}
+    <div class="result-breakdown">
+      <div class="breakdown-header">รายละเอียดผลการตอบ</div>
+      ${breakdownHTML}
+    </div>
+    <div class="result-actions">
+      <button class="btn btn-retry" onclick="retryQuiz()">🔄 ทำแบบทดสอบใหม่</button>
+      <button class="btn btn-review" onclick="reviewLesson()">📖 ทบทวนบทเรียน</button>
+      ${pass ? '<button class="btn" style="background:#6b7280;color:white;" onclick="window.print()">🖨️ พิมพ์ผลลัพธ์</button>' : ''}
+    </div>
+  `;
+  window.scrollTo(0,0);
+}
+
+function retryQuiz() {
+  quizAnswers = {};
+  showScreen('screen-quiz');
+  document.querySelectorAll('.mod-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-quiz').classList.add('active');
+  renderQuiz();
+  startTimer();
+  window.scrollTo(0,0);
+}
+
+function reviewLesson() {
+  goModule(0);
+}
+</script>
+</body>
+</html>
