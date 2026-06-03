@@ -1121,16 +1121,43 @@ function checkScenario(id, btn, isCorrect) {
 }
 
 // ============================================================
-//  QUIZ
+//  QUIZ — SHUFFLE
 // ============================================================
+let activeQuiz = []; // shuffled quiz for current attempt
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function prepareShuffledQuiz() {
+  // สุ่มลำดับข้อ
+  const shuffledQ = shuffleArray(quizData);
+  // สุ่มลำดับตัวเลือกในแต่ละข้อ แต่ยังรู้ว่าคำตอบถูกอยู่ที่ไหน
+  return shuffledQ.map(q => {
+    const indexed = q.choices.map((c, i) => ({ text: c, correct: i === q.answer }));
+    const shuffled = shuffleArray(indexed);
+    return {
+      q: q.q,
+      choices: shuffled.map(c => c.text),
+      answer: shuffled.findIndex(c => c.correct)
+    };
+  });
+}
+
 function renderQuiz() {
   quizAnswers = {};
-  document.getElementById('quiz-body').innerHTML = quizData.map((q, qi) => `
+  activeQuiz = prepareShuffledQuiz(); // สุ่มใหม่ทุกครั้ง
+  document.getElementById('quiz-body').innerHTML = activeQuiz.map((q, qi) => `
     <div class="quiz-card unanswered" id="qcard-${qi}">
-      <div class="q-num">ข้อที่ ${qi+1} จาก ${quizData.length}</div>
+      <div class="q-num">ข้อที่ ${qi+1} จาก ${activeQuiz.length}</div>
       <div class="q-text">${q.q}</div>
       <div class="q-choices">
-        ${q.choices.map((c,ci) => `
+        ${q.choices.map((c, ci) => `
           <button class="q-choice" onclick="selectAnswer(${qi},${ci})">
             ${'กขคง'[ci]}. ${c}
           </button>
@@ -1143,11 +1170,11 @@ function renderQuiz() {
 function selectAnswer(qi, ci) {
   quizAnswers[qi] = ci;
   const card = document.getElementById(`qcard-${qi}`);
-  card.querySelectorAll('.q-choice').forEach((b,i) => b.classList.toggle('selected', i === ci));
+  card.querySelectorAll('.q-choice').forEach((b, i) => b.classList.toggle('selected', i === ci));
   card.className = 'quiz-card answered';
   const count = Object.keys(quizAnswers).length;
-  document.getElementById('quiz-answered-count').textContent = `ตอบแล้ว ${count} / ${quizData.length} ข้อ`;
-  document.getElementById('btn-submit').disabled = count < quizData.length;
+  document.getElementById('quiz-answered-count').textContent = `ตอบแล้ว ${count} / ${activeQuiz.length} ข้อ`;
+  document.getElementById('btn-submit').disabled = count < activeQuiz.length;
 }
 
 function startTimer() {
@@ -1155,8 +1182,8 @@ function startTimer() {
   if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     timeLeft--;
-    const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
-    const s = String(timeLeft%60).padStart(2,'0');
+    const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const s = String(timeLeft % 60).padStart(2, '0');
     const el = document.getElementById('quiz-timer');
     if (el) { el.textContent = `${m}:${s}`; el.classList.toggle('urgent', timeLeft < 300); }
     if (timeLeft <= 0) { clearInterval(timerInterval); submitQuiz(); }
@@ -1166,48 +1193,218 @@ function startTimer() {
 function submitQuiz() {
   clearInterval(timerInterval);
   let score = 0;
-  const results = quizData.map((q, qi) => {
+  const results = activeQuiz.map((q, qi) => {
     const correct = quizAnswers[qi] === q.answer;
     if (correct) score++;
-    return { q: q.q, correct, chosen: quizAnswers[qi], answer: q.answer };
+    return { q: q.q, correct };
   });
   showResult(score, results);
 }
 
+// ============================================================
+//  RESULT + CERTIFICATE
+// ============================================================
 function showResult(score, results) {
   showScreen('screen-result');
   const pct = score * 5;
   const excellent = pct >= 90;
   const pass = pct >= 70;
-  const gradeClass = excellent ? 'grade-excellent' : (pass ? 'grade-pass' : 'grade-fail');
-  const gradeText  = excellent ? '🌟 ดีเยี่ยม' : (pass ? '✅ ผ่าน' : '❌ ไม่ผ่าน');
-  const icon       = excellent ? '🏆' : (pass ? '🎖️' : '📚');
 
-  document.getElementById('result-card').innerHTML = `
-    <div class="result-icon">${icon}</div>
-    <div class="result-name">${studentName}</div>
-    <div class="result-score-label">คะแนนที่ได้</div>
-    <div class="result-score">${pct}<span>/100</span></div>
-    <div class="result-score-label" style="margin-top:4px;">(ตอบถูก ${score} จาก ${quizData.length} ข้อ)</div>
-    <span class="result-grade ${gradeClass}">${gradeText}</span>
-    ${!pass ? '<div class="alert alert-warning" style="text-align:left;margin:14px 0;">ต้องได้ 70 คะแนนขึ้นไปจึงจะผ่าน กรุณาทบทวนบทเรียนและทดสอบใหม่</div>' : ''}
-    ${pass  ? '<div class="alert alert-success" style="text-align:left;margin:14px 0;">ยินดีด้วย! คุณผ่านการทดสอบความรู้ด้านความมั่นคงปลอดภัยไซเบอร์</div>' : ''}
-    <div class="result-breakdown">
-      <div class="breakdown-header">รายละเอียดผลการตอบ</div>
-      ${results.map((r,i) => `
-        <div class="breakdown-item">
-          <span>ข้อ ${i+1}: ${r.q.substring(0,45)}${r.q.length>45?'...':''}</span>
-          <span class="${r.correct ? 'correct-mark' : 'wrong-mark'}">${r.correct ? '✓' : '✗'}</span>
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+
+  if (pass) {
+    // ===== ผ่าน: แสดงใบรับรอง =====
+    const gradeLabel = excellent ? 'ดีเยี่ยม' : 'ผ่าน';
+    const gradeColor = excellent ? '#92400e' : '#166534';
+    const gradeBg    = excellent ? '#fef3c7' : '#dcfce7';
+
+    document.getElementById('result-card').innerHTML = `
+      <!-- ใบรับรอง (screenshot เพื่อส่ง LINE) -->
+      <div id="cert-area" style="
+        background: linear-gradient(135deg, #1a2e0a 0%, #2d5016 100%);
+        border-radius: 14px; padding: 28px 24px; margin-bottom: 20px;
+        color: white; text-align: center; position: relative;
+        border: 3px solid #c9a227;
+      ">
+        <!-- หัว -->
+        <div style="font-size:36px; margin-bottom:6px;">🛡️</div>
+        <div style="font-size:11px; color:#86efac; letter-spacing:1px; margin-bottom:2px;">
+          กรมการสัตว์ทหารบก
         </div>
-      `).join('')}
-    </div>
-    <div class="result-actions">
-      <button class="btn" style="background:var(--army-gold);color:var(--army-dark);" onclick="retryQuiz()">🔄 ทำแบบทดสอบใหม่</button>
-      <button class="btn" style="background:var(--army-green);color:white;" onclick="reviewLesson()">📖 ทบทวนบทเรียน</button>
-      ${pass ? '<button class="btn" style="background:#6b7280;color:white;" onclick="window.print()">🖨️ พิมพ์ผลลัพธ์</button>' : ''}
-    </div>
-  `;
+        <div style="font-size:13px; color:#c9a227; font-weight:bold; margin-bottom:14px;">
+          ความมั่นคงปลอดภัยไซเบอร์
+        </div>
+
+        <!-- เส้นคั่น -->
+        <div style="border-top:1px solid rgba(201,162,39,0.4); margin-bottom:14px;"></div>
+
+        <!-- ชื่อ -->
+        <div style="font-size:12px; color:#9ca3af; margin-bottom:4px;">ผู้เข้าอบรม</div>
+        <div style="font-size:22px; font-weight:bold; color:white; margin-bottom:14px;">
+          ${studentName}
+        </div>
+
+        <!-- คะแนน -->
+        <div style="
+          display:inline-flex; align-items:center; gap:8px;
+          background: rgba(255,255,255,0.1); border-radius:10px;
+          padding: 10px 24px; margin-bottom:14px;
+        ">
+          <span style="font-size:32px; font-weight:bold; color:#c9a227;">${pct}</span>
+          <div style="text-align:left;">
+            <div style="font-size:11px; color:#9ca3af;">คะแนน</div>
+            <div style="font-size:13px; color:#d1fae5;">${score}/${activeQuiz.length} ข้อ</div>
+          </div>
+        </div>
+
+        <!-- ตรา ผ่าน -->
+        <div style="margin-bottom:14px;">
+          <span style="
+            display:inline-block;
+            background:${gradeBg}; color:${gradeColor};
+            border-radius:20px; padding:6px 20px;
+            font-size:15px; font-weight:bold;
+          ">
+            ${excellent ? '🌟' : '✅'} ${gradeLabel}
+          </span>
+        </div>
+
+        <!-- เส้นคั่น -->
+        <div style="border-top:1px solid rgba(201,162,39,0.4); margin-bottom:12px;"></div>
+
+        <!-- วันที่ -->
+        <div style="font-size:12px; color:#9ca3af;">
+          📅 ${dateStr} เวลา ${timeStr} น.
+        </div>
+      </div>
+
+      <!-- คำแนะนำส่ง LINE -->
+      <div style="
+        background:#f0fdf4; border:2px solid #16a34a; border-radius:10px;
+        padding:14px 16px; margin-bottom:16px; text-align:center;
+      ">
+        <div style="font-size:15px; font-weight:bold; color:#166534; margin-bottom:6px;">
+          📲 วิธีส่งผลลัพธ์เข้า LINE กลุ่ม
+        </div>
+        <div style="font-size:14px; color:#374151;">
+          กด <strong>"บันทึกใบรับรอง"</strong> → รูปจะอยู่ในอัลบั้ม → เปิด LINE → แนบรูปส่งกลุ่ม
+        </div>
+      </div>
+
+      <!-- ปุ่มบันทึก -->
+      <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <button class="btn" style="background:#c9a227;color:#1a2e0a;font-size:16px;padding:13px 28px;"
+          onclick="saveCertificate()">
+          💾 บันทึกใบรับรอง
+        </button>
+        <button class="btn" style="background:#4b5563;color:white;" onclick="reviewLesson()">
+          📖 ทบทวนบทเรียน
+        </button>
+      </div>
+
+      <!-- รายละเอียด -->
+      <div class="result-breakdown" style="margin-top:20px;">
+        <div class="breakdown-header">รายละเอียดผลการตอบ</div>
+        ${results.map((r, i) => `
+          <div class="breakdown-item">
+            <span>ข้อ ${i+1}: ${r.q.substring(0, 45)}${r.q.length > 45 ? '...' : ''}</span>
+            <span class="${r.correct ? 'correct-mark' : 'wrong-mark'}">${r.correct ? '✓' : '✗'}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  } else {
+    // ===== ไม่ผ่าน: บังคับทบทวนก่อน =====
+    document.getElementById('result-card').innerHTML = `
+      <div style="text-align:center; padding:10px 0 20px;">
+        <div style="font-size:60px; margin-bottom:10px;">📚</div>
+        <div style="font-size:13px; color:#6b7280; margin-bottom:4px;">ผลการทดสอบของ ${studentName}</div>
+        <div style="font-size:54px; font-weight:bold; color:#1f2937; line-height:1;">
+          ${pct}<span style="font-size:18px; color:#9ca3af;">/100</span>
+        </div>
+        <div style="font-size:14px; color:#6b7280; margin-top:4px;">(ตอบถูก ${score} จาก ${activeQuiz.length} ข้อ)</div>
+        <span class="result-grade grade-fail" style="margin:14px 0; display:inline-block;">❌ ไม่ผ่าน</span>
+
+        <div style="
+          background:#fef3c7; border:2px solid #d97706; border-radius:10px;
+          padding:16px; margin:16px 0; text-align:left;
+        ">
+          <div style="font-weight:bold; color:#92400e; margin-bottom:8px;">⚠️ ต้องทบทวนบทเรียนก่อนสอบใหม่</div>
+          <ul style="color:#78350f; font-size:15px; padding-left:18px; margin:0;">
+            <li>ต้องได้คะแนน 70 ขึ้นไปจึงจะผ่าน</li>
+            <li>กรุณาอ่านบทเรียนทั้ง 5 บทอีกครั้ง</li>
+            <li>ข้อสอบจะสุ่มใหม่ทุกครั้งที่สอบ</li>
+          </ul>
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+          <button class="btn" style="background:#2d5016;color:white;font-size:16px;padding:13px 28px;"
+            onclick="reviewLesson()">
+            📖 ทบทวนบทเรียนและสอบใหม่
+          </button>
+        </div>
+      </div>
+
+      <div class="result-breakdown" style="margin-top:16px;">
+        <div class="breakdown-header">รายละเอียดผลการตอบ</div>
+        ${results.map((r, i) => `
+          <div class="breakdown-item">
+            <span>ข้อ ${i+1}: ${r.q.substring(0, 45)}${r.q.length > 45 ? '...' : ''}</span>
+            <span class="${r.correct ? 'correct-mark' : 'wrong-mark'}">${r.correct ? '✓' : '✗'}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
   window.scrollTo(0, 0);
+}
+
+// ============================================================
+//  SAVE CERTIFICATE AS IMAGE (html2canvas)
+// ============================================================
+function saveCertificate() {
+  const btn = event.target;
+  btn.textContent = '⏳ กำลังสร้างรูป...';
+  btn.disabled = true;
+
+  // โหลด html2canvas แบบ dynamic
+  if (typeof html2canvas === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => doCapture(btn);
+    script.onerror = () => { fallbackSave(btn); };
+    document.head.appendChild(script);
+  } else {
+    doCapture(btn);
+  }
+}
+
+function doCapture(btn) {
+  const el = document.getElementById('cert-area');
+  html2canvas(el, {
+    scale: 2,
+    backgroundColor: null,
+    useCORS: true,
+    logging: false
+  }).then(canvas => {
+    const link = document.createElement('a');
+    const now = new Date();
+    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+    link.download = `ใบรับรอง_ไซเบอร์_${studentName.replace(/\s/g,'_')}_${ts}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.textContent = '✅ บันทึกแล้ว! นำไปส่ง LINE ได้เลย';
+    btn.style.background = '#16a34a';
+    btn.disabled = false;
+  }).catch(() => fallbackSave(btn));
+}
+
+function fallbackSave(btn) {
+  btn.textContent = '💾 บันทึกใบรับรอง';
+  btn.disabled = false;
+  alert('ไม่สามารถบันทึกรูปอัตโนมัติได้\n\nวิธีแก้: กดค้างที่ใบรับรอง (มือถือ) หรือ กดคลิกขวา → Save image (คอม) เพื่อบันทึกรูป');
 }
 
 function retryQuiz() {
@@ -1220,7 +1417,14 @@ function retryQuiz() {
   window.scrollTo(0, 0);
 }
 
-function reviewLesson() { goModule(0); }
+function reviewLesson() {
+  // เปิดทุกบทให้เรียนได้ แต่ต้องกดจบบทเองก่อนสอบใหม่
+  moduleDone = Array(TOTAL_MODULES).fill(false);
+  document.querySelectorAll('.mod-btn').forEach(b => b.classList.remove('done'));
+  for (let i = 1; i < TOTAL_MODULES; i++) document.getElementById(`nav-${i}`).disabled = false;
+  document.getElementById('nav-quiz').disabled = true;
+  goModule(0);
+}
 </script>
 </body>
 </html>
